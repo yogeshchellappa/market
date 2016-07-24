@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8"/>
+		<link rel="stylesheet" href="css/bootstrap.css" rel="stylesheet">
+		<link rel="stylesheet" href="css/bootstrap-responsive.css" rel="stylesheet">
+		<link rel="stylesheet" href="css/style.css" rel="stylesheet">
+		<link rel="stylesheet" href="css/progressbar.css" rel="stylesheet">
+		<script type="text/javascript" src="js/jquery.js"></script>
+		<script src="js/jquery-ui.js"></script>
+		<script src="js/bootstrap.min.js"></script>
+		<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+		<!-- Tab icon -->
+		<link rel="icon" href="img/icon.png" type="image/x-icon"/>
+		<title>
+			Market
+		</title>
+	</head>
+	
+	<body style="background: url(img/logo.jpg); background-size:cover;" onload="get_analytics();">
+			<div id="out">
+				<div style="position:absolute; top:25%; left:36%">
+					<div id="outer">
+						<!-- Progress bar -->
+						<div class="progress-bar blue shine" id="progress">
+							<span style="width:1%" id="indicator"></span></br>
+							<center>
+								<b id="status" style="color:white;">Processing...</b>
+							</center>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<center>
+				<!-- Graph will be displayed here -->
+				<div id="chart_div" style="width: 900px; height: 500px;padding-top:50px;">
+						
+				</div>
+			</center>
+	</body>
+	<script type="text/javascript">
+
+		google.load("visualization", "1", {packages:["corechart"]});
+		google.setOnLoadCallback(drawChart);
+		
+		indicator = document.getElementById("indicator");
+		status = document.getElementById("status");
+		
+		function getXmlHttpObject()
+        {
+            var xmlhttp;
+            if (window.XMLHttpRequest)
+            {// code for IE7+, Firefox, Chrome, Opera, Safari
+                xmlhttp=new XMLHttpRequest();
+            }
+            else
+            {// code for IE6, IE5
+				xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+            } 
+            return xmlhttp;
+        }
+		
+		
+		function get_analytics()
+        {
+            xmlHTTP = getXmlHttpObject();
+			xmlHTTP.open("POST","php/run_apple_analytics.php",true);
+            xmlHTTP.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+            xmlHTTP.send(); 
+            xmlHTTP.onreadystatechange = clearAndDraw;
+        }
+        
+        function clearAndDraw()
+		{
+            if(xmlHTTP.readyState===4 && xmlHTTP.status===200)
+            {
+				if(val<100)
+				{
+					indicator.style.width = 100 + "%";
+					$('#status').html("Rendering graph...");
+					setTimeout(continueExecution, 1500)
+				}
+            }
+		}
+		
+		function continueExecution()
+		{
+			document.getElementById("out").innerHTML = "";
+			drawChart();
+		}
+		
+		function drawChart() 
+		{
+			var obj = JSON.parse(xmlHTTP.responseText);
+			var data = google.visualization.arrayToDataTable([
+				['Apps', 'Score', { role: 'style' }],
+				[obj[0].name, obj[0].score, '#FFFF33'], 
+				[obj[1].name, obj[1].score, '#C5A5CF'],           
+				[obj[2].name, obj[2].score, '#88ee45'],
+				[obj[3].name, obj[3].score, '#ff8956' ],
+				[obj[4].name, obj[4].score, '#09ddee' ]
+			]);
+
+			var options = {
+				title: obj.name,
+				hAxis: {title: 'Competing Apps', titleTextStyle: {color: 'grey'}},
+			};
+
+			var chart = new google.visualization.ColumnChart(document.getElementById('chart_div'));
+			chart.draw(data, options);
+		}
+		
+		$(document).ready(function() {  
+			foo();
+		}); 
+		
+		function foo()
+		{
+			t = setInterval(function(){
+				process()},
+				3333);
+		}
+		
+		var statuses = [
+			"Obtaining competing apps...",
+			"Fetching competing app details...",
+			"Running analysis...",
+			"Running sentiment analysis on reviews...",
+			"Calculating score...",
+			"Creating graph..."
+		];
+		
+		var val = 5;
+		
+		function process()
+		{
+			if(val+17 < 100)
+				val += 16;
+			$('#status').html(statuses[0]);
+			indicator.style.width = val + "%";
+			if(statuses.length == 1)
+				clearInterval(t);
+			else
+			{
+				statuses.shift();
+			}
+		}
+	</script>
+</html>

@@ -1,0 +1,1 @@
+com.mobisystems.editor.office_with_reg

@@ -1,0 +1,9 @@
+.mycover {
+  margin-left: -20px;
+  list-style: none;
+  *zoom: 1;
+   width:1000px;
+   height: 200px;
+   max-width: 1001px;
+  max-height: 201px
+}
